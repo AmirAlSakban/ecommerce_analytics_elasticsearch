@@ -102,7 +102,7 @@ The system follows a three-layer architecture:
 
 ---
 
-## Quick Start for Evaluation
+## Quick Start
 
 1. **Start Elasticsearch**: `./start_elasticsearch.bat` (wait 60s for startup)
 2. **Verify health**: `curl http://localhost:9200` → should return cluster info
@@ -112,7 +112,3 @@ The system follows a three-layer architecture:
 6. **Launch API**: `uvicorn api.main:app` → Swagger at `http://localhost:8000/docs`
 7. **Run Postman tests**: Import collection, set `baseUrl=http://localhost:8000`, execute folder
 8. **Open dashboard**: `streamlit run app/streamlit_app.py` → `http://localhost:8501`
-
----
-
-**All milestones are demonstrable locally with provided URLs and commands.**
