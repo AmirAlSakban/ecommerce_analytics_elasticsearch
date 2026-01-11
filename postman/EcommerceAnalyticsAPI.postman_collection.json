@@ -1,0 +1,184 @@
+{
+  "info": {
+    "_postman_id": "c4a59741-b4a5-4f66-a18c-3a0d7a943af1",
+    "name": "Ecommerce Analytics API",
+    "description": "Postman collection covering the FastAPI endpoints for product ingestion, attribute checks, and supplier KPIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Healthcheck",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/healthz",
+          "host": ["{{baseUrl}}"],
+          "path": ["healthz"]
+        }
+      }
+    },
+    {
+      "name": "Create Product (positive)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sku\": \"SKU-API-001\",\n  \"name\": \"Gel Polish mat 30ml #A021\",\n  \"brand\": \"Studio Nails\",\n  \"category_main\": \"Gel Polish\",\n  \"description_short\": \"Gel polish cu finisaj mat, volum 30 ml si cod #A021\",\n  \"price_final\": 55.0,\n  \"attributes\": {\n    \"attr_finish\": \"mat\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"]
+        }
+      }
+    },
+    {
+      "name": "Create Product (negative missing name)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sku\": \"SKU-API-002\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Product",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/SKU-API-001",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "SKU-API-001"]
+        }
+      }
+    },
+    {
+      "name": "Missing Attributes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/missing-attributes?attribute=attr_shade_code&category_main=Gel%20Polish&size=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "missing-attributes"],
+          "query": [
+            {"key": "attribute", "value": "attr_shade_code"},
+            {"key": "category_main", "value": "Gel Polish"},
+            {"key": "size", "value": "10"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Incident",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"supplier_id\": \"SUP-RO-01\",\n  \"supplier_name\": \"Furnizor Test\",\n  \"sku\": \"SKU-API-001\",\n  \"product_type\": \"nail_polish\",\n  \"category_main\": \"Gel Polish\",\n  \"qty_total_in_shipment\": 100,\n  \"qty_damaged\": 7,\n  \"damage_type\": [\"bottles_broken\"],\n  \"shipment_id\": \"SHIP-2025-001\",\n  \"transport_company\": \"Fan Courier\",\n  \"comment\": \"Ambalaj exterior rupt\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/incidents",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "incidents"]
+        }
+      }
+    },
+    {
+      "name": "List Incidents",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/incidents?supplier_id=SUP-RO-01&size=5",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "incidents"],
+          "query": [
+            {"key": "supplier_id", "value": "SUP-RO-01"},
+            {"key": "size", "value": "5"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Supplier KPI Snapshot",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/incidents/kpis?product_type=nail_polish",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "incidents", "kpis"],
+          "query": [
+            {"key": "product_type", "value": "nail_polish"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Supplier KPI by Type",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/incidents/kpis/by-type",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "incidents", "kpis", "by-type"]
+        }
+      }
+    },
+    {
+      "name": "Supplier Monthly KPI",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/incidents/kpis/SUP-RO-01/monthly",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "incidents", "kpis", "SUP-RO-01", "monthly"]
+        }
+      }
+    },
+    {
+      "name": "Daily Stats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/stats/daily/SKU-API-001?size=14",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "stats", "daily", "SKU-API-001"],
+          "query": [
+            {"key": "size", "value": "14"}
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}

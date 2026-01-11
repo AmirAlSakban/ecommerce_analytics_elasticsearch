@@ -1,0 +1,366 @@
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# JetBrains
+.idea/
+*.iml
+out/
+.idea_modules/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+
+# ============================================================================
+# Operating Systems
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Project-Specific
+# ============================================================================
+
+# Local settings (keep example file)
+local_settings.json
+!local_settings.example.json
+
+# Data files
+data/raw/*.xlsx
+data/raw/*.csv
+data/raw/*.xls
+data/processed/
+data/temp/
+data/cache/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Elasticsearch / Kibana local installations
+out/
+elasticsearch-*/
+kibana-*/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# FastAPI
+.cache/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+
+# Test outputs
+test-results/
+test-reports/
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*~.xlsx
+*~.csv
+
+# Screenshots (if not needed for docs)
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Reports
+reports/*.pdf
+reports/*.html
+
+# Internal documentation (not for professor)
+README_DEV.md
+AGENTS.md
+DEMO_GUIDE.md
+docs/AGENTS.md
+docs/AGENTS2.md
+docs/AGENTS3.md
+docs/AGENTS4.md
+docs/ARCHITECTURE.md
+docs/TESTING_AND_LOGGING.md
+docs/USER_GUIDE.md
+
+# ============================================================================
+# Development Tools
+# ============================================================================
+
+# Node modules (if any frontend tooling is added)
+node_modules/
+
+# Package manager locks (keep requirements.txt)
+poetry.lock
+Pipfile.lock
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Profiling
+*.prof
+*.lprof
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================================================
+# Sensitive Information
+# ============================================================================
+
+# API keys and secrets
+.env
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+*_secret*
+*_private*
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# ============================================================================
+# Temporary and Cache Files
+# ============================================================================
+
+# General temp files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Cache directories
+__cache__/
+.cache/
+cache/
+
+# ============================================================================
+# Postman (keep collection, ignore environment/sensitive data)
+# ============================================================================
+
+postman/*_environment.json
+postman/*_globals.json
+
+# ============================================================================
+# PlantUML Generated Images (keep .puml source files)
+# ============================================================================
+
+diagrams/*.png
+diagrams/*.svg
+diagrams/*.pdf
+
+# ============================================================================
+# Documentation Build Outputs
+# ============================================================================
+
+docs/_build/
+docs/site/
+*.md.bak

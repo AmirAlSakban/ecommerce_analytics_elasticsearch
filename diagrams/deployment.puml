@@ -1,0 +1,173 @@
+@startuml DeploymentDiagram
+!define LIGHTORANGE FFE0B2
+!define LIGHTBLUE B3E5FC
+!define LIGHTGREEN C8E6C9
+!define LIGHTPURPLE E1BEE7
+!define LIGHTYELLOW FFF9C4
+
+skinparam componentStyle rectangle
+skinparam defaultFontSize 11
+
+title Development & Production Deployment
+
+package "Development Environment" <<Rectangle>> {
+  
+  node "Developer Machine\nWindows/Mac/Linux" as DevMachine {
+    
+    folder "Source Code" as Code #LIGHTYELLOW {
+      component "Python 3.11+" as Python
+      component "Git Repository" as Git
+    }
+    
+    folder "Runtime Services" as Runtime {
+      component "Elasticsearch 8.15.2\nlocalhost:9200" as ESLocal #LIGHTBLUE
+      component "FastAPI\nlocalhost:8000" as APILocal #LIGHTGREEN
+      component "Streamlit\nlocalhost:8501" as DashLocal #LIGHTORANGE
+    }
+    
+    folder "Development Tools" as DevTools {
+      component "VS Code/IDE" as IDE
+      component "Postman" as Postman
+      component "Git CLI" as GitCLI
+      component "pytest" as Pytest
+    }
+    
+    folder "Convenience Scripts" as Scripts #LIGHTPURPLE {
+      file "start_elasticsearch.bat"
+      file "start_dashboard.bat"
+      file "run_ingest_with_picker.bat"
+      file "run_api.bat"
+      file "run_tests.py"
+    }
+  }
+  
+  cloud "GitHub" as GitHub {
+    storage "Remote Repository" as Repo
+  }
+  
+  folder "Local Data" as LocalData {
+    file "data/raw/*.xlsx" as ExcelData
+    file "data/raw/*.csv" as CSVData
+    file "local_settings.json" as Config
+    file "logs/*.log" as Logs
+  }
+}
+
+package "Production Environment (Future)" <<Rectangle>> {
+  
+  node "Load Balancer\nNginx/AWS ALB" as LB #LIGHTPURPLE
+  
+  node "Application Tier" as AppTier {
+    folder "FastAPI Cluster" as APICluster #LIGHTGREEN {
+      component "API Instance 1\n:8000" as API1
+      component "API Instance 2\n:8000" as API2
+      component "API Instance 3\n:8000" as API3
+    }
+    
+    component "Streamlit\n:8501" as DashProd #LIGHTORANGE
+  }
+  
+  node "Data Tier" as DataTier {
+    folder "Elasticsearch Cluster" as ESCluster #LIGHTBLUE {
+      database "Master Node 1" as Master1
+      database "Data Node 1" as Data1
+      database "Data Node 2" as Data2
+      database "Data Node 3" as Data3
+    }
+    
+    storage "Snapshot Repository\nS3/Azure Blob" as Backup #LIGHTYELLOW
+  }
+  
+  node "Monitoring" as Monitoring {
+    component "Prometheus" as Prom
+    component "Grafana" as Graf
+    component "ELK Stack" as ELK
+  }
+  
+  cloud "External Services" as External {
+    interface "Mobile App" as Mobile
+    interface "Web Browser" as Browser
+    interface "Third-party API" as ThirdParty
+  }
+}
+
+' Development connections
+Code --> Runtime : Executes
+Scripts --> Runtime : Starts
+IDE --> Code : Edits
+GitCLI --> Git : Commits
+Git --> GitHub : Push/Pull
+Postman --> APILocal : Tests
+Pytest --> Code : Validates
+LocalData --> Runtime : Data source
+Runtime --> Logs : Writes
+
+' Production connections
+Browser --> LB : HTTPS
+Mobile --> LB : HTTPS
+ThirdParty --> LB : API Calls
+
+LB --> API1 : Routes
+LB --> API2 : Routes
+LB --> API3 : Routes
+LB --> DashProd : Routes
+
+API1 --> ESCluster : Queries
+API2 --> ESCluster : Queries
+API3 --> ESCluster : Queries
+DashProd --> ESCluster : Queries
+
+Master1 --> Data1 : Coordinates
+Master1 --> Data2 : Coordinates
+Master1 --> Data3 : Coordinates
+
+ESCluster --> Backup : Snapshots
+
+APICluster --> Prom : Metrics
+DashProd --> Prom : Metrics
+ESCluster --> Prom : Metrics
+Prom --> Graf : Visualize
+APICluster --> ELK : Logs
+ESCluster --> ELK : Logs
+
+note right of DevMachine
+  **Quick Start Commands:**
+  ./start_elasticsearch.bat
+  ./run_ingest_with_picker.bat
+  ./start_dashboard.bat
+  ./run_api.bat
+end note
+
+note right of Scripts
+  All scripts include:
+  • Connection validation
+  • Clear error messages
+  • Progress indicators
+  • UTF-8 Romanian support
+end note
+
+note right of LB
+  **Production Features:**
+  • TLS termination
+  • Rate limiting
+  • Health checks
+  • Session affinity
+end note
+
+note right of ESCluster
+  **HA Configuration:**
+  • 1 master + 3 data nodes
+  • Replication factor: 2
+  • Daily snapshots to S3
+  • Auto-scaling enabled
+end note
+
+note right of Monitoring
+  **Observability:**
+  • API response times
+  • ES query performance
+  • Error rates & logs
+  • Resource utilization
+end note
+
+@enduml

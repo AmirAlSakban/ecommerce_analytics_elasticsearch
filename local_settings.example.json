@@ -1,0 +1,19 @@
+{
+  "es_url": "http://localhost:9200",
+  "es_username": null,
+  "es_password": null,
+  "indices": {
+    "products": "products",
+    "sku_daily_stats": "sku_daily_stats",
+    "supplier_incidents": "supplier_incidents"
+  },
+  "data_paths": {
+    "products_export": "data/raw/products_latest.xlsx",
+    "orders_export": "data/raw/orders_latest.csv",
+    "returns_export": "data/raw/returns_latest.csv"
+  },
+  "ui": {
+    "product_url_template": "https://magazinulmeu.ro/sku/{sku}"
+  },
+  "log_level": "INFO"
+}

@@ -1,0 +1,91 @@
+@startuml APIFlow
+!define LIGHTORANGE FFE0B2
+!define LIGHTBLUE B3E5FC
+!define LIGHTGREEN C8E6C9
+!define LIGHTPURPLE E1BEE7
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam ArrowColor #333333
+
+title REST API Request Flow - Product Ingestion
+
+participant "Client (Postman/App)" as Client
+participant "FastAPI\n:8000" as API #LIGHTORANGE
+participant "Pydantic\nSchemas" as Schema #LIGHTPURPLE
+participant "Services\nLayer" as Service #LIGHTGREEN
+participant "Attribute\nExtraction" as Extract #LIGHTGREEN
+participant "Elasticsearch\n:9200" as ES #LIGHTBLUE
+
+== Product Ingestion ==
+
+Client -> API: POST /api/products\nContent-Type: application/json\n{\n  "sku": "SKU-001",\n  "name": "Gel Polish mat 30ml",\n  "price_final": 45.0\n}
+
+API -> Schema: Validate with\nProductPayload
+note right
+  • sku: required
+  • name: min_length=1
+  • price_final: optional
+  • attributes: extra allowed
+end note
+
+alt Validation Failed
+  Schema --> API: ValidationError
+  API --> Client: 400 Bad Request\n{"detail": [...]}
+else Validation OK
+  Schema --> API: ✅ Valid data
+  
+  API -> Service: upsert_product(\n  payload.model_dump()\n)
+  
+  Service -> Extract: extract_attributes(\n  description="Gel Polish mat 30ml"\n)
+  
+  Extract -> Extract: Apply regex:\n• volume: 30ml → 30.0\n• finish: mat
+  
+  Extract --> Service: {\n  "attr_volume_ml": 30.0,\n  "attr_finish": "mat"\n}
+  
+  Service -> Service: Merge:\n• Base fields\n• Extracted attrs\n• Explicit overrides\n• updated_at timestamp
+  
+  Service -> ES: Index document\nPUT /products/_doc/SKU-001
+  
+  ES --> Service: ✅ Indexed
+  
+  Service --> API: ProductIngestResponse(\n  sku="SKU-001",\n  indexed=True,\n  attributes={...}\n)
+  
+  API --> Client: 200 OK\n{\n  "sku": "SKU-001",\n  "indexed": true,\n  "attributes": {\n    "attr_volume_ml": 30.0,\n    "attr_finish": "mat"\n  },\n  "url": "https://shop.com/SKU-001"\n}
+end
+
+== Product Retrieval ==
+
+Client -> API: GET /api/products/SKU-001
+
+API -> Service: fetch_product("SKU-001")
+
+Service -> ES: GET /products/_doc/SKU-001
+
+alt Product Found
+  ES --> Service: Document
+  Service --> API: ProductDocument
+  API --> Client: 200 OK\n{"sku": "SKU-001", ...}
+else Product Not Found
+  ES --> Service: 404
+  Service --> API: KeyError
+  API --> Client: 404 Not Found\n{"detail": "Product not found"}
+end
+
+== Missing Attributes Query ==
+
+Client -> API: GET /api/products/missing-attributes\n?attribute=attr_shade_code\n&category_main=Gel Polish\n&size=50
+
+API -> Service: list_missing_attributes(\n  attribute="attr_shade_code",\n  category="Gel Polish",\n  size=50\n)
+
+Service -> Service: Build ES query:\n• must_not: exists(attr_shade_code)\n• filter: term(category_main)\n• sort: price_final desc
+
+Service -> ES: Search /products/_search
+
+ES --> Service: Results (prioritized\nby revenue impact)
+
+Service --> API: MissingAttributeResponse[\n  {"sku": "...", "name": "...",\n   "price_final": 89.0}\n]
+
+API --> Client: 200 OK\n[\n  {"sku": "SKU-123",\n   "name": "Product without shade",\n   "price_final": 89.0,\n   "missing_attribute": "attr_shade_code"}\n]
+
+@enduml

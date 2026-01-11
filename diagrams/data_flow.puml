@@ -1,0 +1,105 @@
+@startuml DataFlow
+!define LIGHTORANGE FFE0B2
+!define LIGHTBLUE B3E5FC
+!define LIGHTGREEN C8E6C9
+!define LIGHTRED FFCDD2
+
+skinparam arrowThickness 1.5
+skinparam ArrowColor #333333
+skinparam defaultFontSize 11
+
+title Product Ingestion Data Flow with File Picker
+
+|User|
+start
+:Click run_ingest_with_picker.bat;
+
+|File Picker|
+:Check Elasticsearch connection;
+
+if (ES Running?) then (no)
+  #LIGHTRED:Display error message\n❌ Start Elasticsearch first\n./start_elasticsearch.bat;
+  stop
+else (yes)
+  :✅ Connection OK;
+  :Open Windows dialog\n📂 Select Products Excel;
+  
+  if (File selected?) then (yes)
+    :Store products_path;
+  else (no)
+    #LIGHTRED:Exit with error\n(Products required);
+    stop
+  endif
+  
+  :Open dialog\n📂 Select Orders CSV\n(optional);
+  note right: User can click Cancel
+  
+  :Open dialog\n📂 Select Returns CSV\n(optional);
+  note right: User can click Cancel
+endif
+
+|Orchestrator|
+:Log start message\n🚀 INGESTIE DATE;
+:Pass file paths to\ningest modules;
+
+|Product Ingestion|
+:Load Excel with pandas\nro_column_map headers;
+:Normalize columns:
+• Cod → sku
+• Nume → name
+• Brand → brand
+• Pret → price_final;
+
+repeat
+  :For each product row;
+  
+  |Attribute Extraction|
+  :Apply regex patterns:
+  • Volume: 30ml → attr_volume_ml
+  • Shade: #A021 → attr_shade_code
+  • Finish: mat → attr_finish
+  • Grit: 180/240 → attr_grit
+  • Material: inox → attr_material
+  • Collection: Colecția X;
+  
+  if (Attributes found?) then (yes)
+    :Merge attr_* fields\ninto document;
+  else (no)
+    :Keep base fields only;
+  endif
+  
+  |Product Ingestion|
+  :Add updated_at timestamp;
+  :Buffer for bulk insert;
+  
+repeat while (More products?) is (yes)
+->no;
+
+:Bulk API call\n(batch size 500);
+
+|Elasticsearch|
+:Validate mapping\n(elastic_mappings.py);
+:Index to products;
+:Return success count;
+
+|Product Ingestion|
+:Log results\n✅ 250 produse indexate;
+
+if (Orders file provided?) then (yes)
+  |Order Ingestion|
+  :Load orders CSV;
+  :Aggregate by SKU + date;
+  :Index to sku_daily_stats;
+endif
+
+if (Returns file provided?) then (yes)
+  |Return Ingestion|
+  :Load returns CSV;
+  :Update sku_daily_stats\nwith return counts;
+endif
+
+|Orchestrator|
+:Display completion\n✅ INGESTIE COMPLETĂ;
+stop
+
+@enduml

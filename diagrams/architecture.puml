@@ -1,0 +1,120 @@
+@startuml Architecture
+!define LIGHTORANGE FFE0B2
+!define LIGHTBLUE B3E5FC
+!define LIGHTGREEN C8E6C9
+!define LIGHTPURPLE E1BEE7
+!define LIGHTYELLOW FFF9C4
+
+skinparam componentStyle rectangle
+skinparam ArrowColor #333333
+skinparam defaultFontSize 11
+
+title E-Commerce Analytics Platform Architecture
+
+package "Data Sources" <<Cloud>> #LIGHTYELLOW {
+  folder "Files" {
+    file "Excel Product\nCatalog" as Excel
+    file "Orders CSV" as Orders
+    file "Returns CSV" as Returns
+  }
+}
+
+package "Ingestion Layer" <<Rectangle>> #LIGHTGREEN {
+  component "File Picker UI\n(run_ingest_with_picker.bat)" as FilePicker
+  component "Orchestrator\n(run_all_ingest.py)" as Orchestrator
+  component "Product Ingest\n(ingest_products.py)" as ProdIngest
+  component "Order Ingest\n(ingest_orders.py)" as OrderIngest
+  component "Return Ingest\n(ingest_returns.py)" as ReturnIngest
+  component "Attribute Extraction\n(attribute_extraction.py)" as Extract
+}
+
+package "Core Modules" <<Rectangle>> #LIGHTPURPLE {
+  component "Attribute Analysis\n(attribute_analysis.py)" as AttrAnalysis
+  component "Supplier Incidents\n(supplier_incidents.py)" as SupplierModule
+  component "ES Mappings\n(elastic_mappings.py)" as Mappings
+  component "Validation\n(validate_*.py)" as Validation
+}
+
+node "Elasticsearch 8.15.2" as ES <<Database>> #LIGHTBLUE {
+  database "products" as Products {
+    collections "40+ fields\nattr_* derived"
+  }
+  database "sku_daily_stats" as Stats {
+    collections "views, purchases\nreturns, revenue"
+  }
+  database "supplier_incidents" as Incidents {
+    collections "damage tracking\nKPI aggregations"
+  }
+}
+
+package "Application Layer" <<Rectangle>> #LIGHTORANGE {
+  component "FastAPI REST API\n:8000\n(11 endpoints)" as API
+  component "Swagger UI\n/docs" as Swagger
+  component "Streamlit Dashboard\n:8501\n(4 views)" as Dashboard
+}
+
+package "External Integration" <<Cloud>> {
+  actor "Postman\nTesting" as Postman
+  actor "CI/CD\nPipeline" as CICD
+}
+
+' Data Flow - Ingestion
+Excel --> FilePicker : User selects
+Orders --> FilePicker : Optional
+Returns --> FilePicker : Optional
+
+FilePicker --> Orchestrator : Validate ES\nthen trigger
+Orchestrator --> ProdIngest
+Orchestrator --> OrderIngest
+Orchestrator --> ReturnIngest
+
+ProdIngest --> Extract : Parse descriptions
+Extract --> ProdIngest : attr_* dict
+ProdIngest --> Products : Bulk index
+OrderIngest --> Stats : Daily aggregates
+ReturnIngest --> Stats : Return metrics
+
+' Core Logic
+Products --> AttrAnalysis : Coverage queries
+Stats --> AttrAnalysis : Performance data
+Incidents --> SupplierModule : KPI calculations
+
+' Application Layer
+Mappings ..> ES : Define schemas
+AttrAnalysis --> API : Service layer
+SupplierModule --> API : Service layer
+AttrAnalysis --> Dashboard : Direct queries
+SupplierModule --> Dashboard : Direct queries
+
+API --> Swagger : Auto-generated
+Postman ..> API : Testing
+CICD ..> API : Future automation
+
+' Validation
+Products --> Validation : Quality checks
+Incidents --> Validation : Data integrity
+
+note right of FilePicker
+  ✅ Connection check
+  📂 Interactive dialogs
+  ⚠️ Clear error messages
+end note
+
+note right of API
+  POST /api/products
+  GET /api/products/{sku}
+  GET /api/products/missing-attributes
+  POST /api/incidents
+  GET /api/incidents
+  GET /api/incidents/kpis
+  + 5 more endpoints
+end note
+
+note right of Dashboard
+  1. Incident Logging
+  2. Supplier Analytics
+  3. Attribute Analysis
+  4. Action Lists
+end note
+
+@enduml

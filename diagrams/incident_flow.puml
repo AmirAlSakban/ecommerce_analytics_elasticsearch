@@ -1,0 +1,106 @@
+@startuml IncidentFlow
+!define LIGHTORANGE FFE0B2
+!define LIGHTBLUE B3E5FC
+!define LIGHTGREEN C8E6C9
+!define LIGHTPURPLE E1BEE7
+!define LIGHTYELLOW FFF9C4
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam ArrowColor #333333
+
+title Supplier Incident Tracking Flow
+
+participant "Operator" as User #LIGHTYELLOW
+participant "Streamlit\nDashboard\n:8501" as Dashboard #LIGHTORANGE
+participant "Supplier\nIncidents\nModule" as Module #LIGHTGREEN
+participant "Elasticsearch\n:9200" as ES #LIGHTBLUE
+database "supplier_incidents\nindex" as Index #LIGHTBLUE
+
+== Incident Logging ==
+
+User -> Dashboard: Navigate to\n"Incident Logging" tab
+
+Dashboard -> Dashboard: Load UI:\n• Supplier selector\n• Date picker\n• Quantity fields\n• Damage type checkboxes
+
+User -> Dashboard: Fill form:\n• supplier_id: SUP-123\n• date_reported: 2025-11-25\n• qty_total: 100\n• qty_damaged: 5\n• damage_type: bottles_broken
+
+User -> Dashboard: Click "Log Incident"
+
+Dashboard -> Dashboard: Validate:\n• qty_damaged ≤ qty_total\n• required fields present
+
+alt Validation Failed
+  Dashboard --> User: ⚠️ Error message
+else Validation OK
+  Dashboard -> Module: insert_incident(\n  SupplierIncident(...)\n)
+  
+  Module -> Module: Generate incident_id\nif not provided
+  
+  Module -> Module: Normalize damage_type\nto list
+  
+  Module -> Module: Add created_at\ntimestamp
+  
+  Module -> ES: POST /supplier_incidents/_doc
+  
+  ES --> Module: ✅ Created
+  
+  Module --> Dashboard: Success
+  
+  Dashboard --> User: ✅ Incident logged\nsuccessfully
+end
+
+== Supplier KPI View ==
+
+User -> Dashboard: Navigate to\n"Supplier Analytics" tab
+
+Dashboard -> Dashboard: Set filters:\n• Date range: Last 30 days\n• Product type: nail_polish
+
+Dashboard -> Module: damage_rate_per_supplier(\n  product_type="nail_polish"\n)
+
+Module -> ES: Search with aggregation:\naggs: {\n  suppliers: {\n    terms: {field: supplier_id},\n    aggs: {\n      total_qty: sum(qty_total),\n      damaged_qty: sum(qty_damaged),\n      damage_rate: bucket_script\n    }\n  }\n}
+
+ES --> Module: Aggregation results:\n[\n  {supplier_id: "SUP-123",\n   damage_rate: 0.05,\n   qty_total: 1000}\n]
+
+Module -> Module: Transform to DataFrame
+
+Module --> Dashboard: Supplier KPIs
+
+Dashboard -> Dashboard: Render charts:\n• Bar chart: damage rate\n• Table: detailed metrics\n• Trend lines
+
+Dashboard --> User: Display analytics
+
+== Monthly Trend Analysis ==
+
+User -> Dashboard: Select supplier:\nSUP-123
+
+Dashboard -> Module: monthly_damage_rate_for_supplier(\n  "SUP-123"\n)
+
+Module -> ES: Search with date_histogram:\naggs: {\n  by_month: {\n    date_histogram: {\n      field: date_reported,\n      interval: "month"\n    },\n    aggs: {\n      damage_rate: ...\n    }\n  }\n}
+
+ES --> Module: Monthly buckets:\n[\n  {month: "2025-09",\n   damage_rate: 0.03},\n  {month: "2025-10",\n   damage_rate: 0.05}\n]
+
+Module -> Module: Format as DataFrame
+
+Module --> Dashboard: Monthly trends
+
+Dashboard -> Dashboard: Render line chart
+
+Dashboard --> User: Show trend over time
+
+== Damage Type Distribution ==
+
+User -> Dashboard: View damage\ntype breakdown
+
+Dashboard -> Module: damage_types_distribution_per_supplier()
+
+Module -> ES: Terms aggregation\non damage_type field
+
+ES --> Module: [\n  {damage_type: "bottles_broken",\n   count: 45},\n  {damage_type: "label_damage",\n   count: 23}\n]
+
+Module --> Dashboard: Distribution data
+
+Dashboard -> Dashboard: Render pie chart
+
+Dashboard --> User: Show damage\ntype percentages
+
+@enduml
